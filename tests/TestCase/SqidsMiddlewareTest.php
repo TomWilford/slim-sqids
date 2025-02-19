@@ -4,40 +4,80 @@ declare(strict_types=1);
 
 namespace TomWilford\SlimSqids\Tests\TestCase;
 
-use Nyholm\Psr7\Factory\Psr17Factory;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
-use Slim\App;
 use Sqids\Sqids;
 use TomWilford\SlimSqids\SqidsMiddleware;
 use TomWilford\SlimSqids\Tests\Fixtures\TestAction;
+use TomWilford\SlimSqids\Tests\Traits\HttpTestTrait;
 
+#[UsesClass(SqidsMiddleware::class)]
 class SqidsMiddlewareTest extends TestCase
 {
-    private App $app;
-    private Psr17Factory $factory;
+    use HttpTestTrait;
 
     protected function setUp(): void
     {
-        $this->factory = new Psr17Factory();
-        $this->app = new App($this->factory);
-        $this->app->addBodyParsingMiddleware();
+        $this->createApp();
     }
 
-    public function testShouldEncodeUriArguments()
+    public function testMiddlewareDecodesSqidFromUrl(): void
     {
-        $sqids = new Sqids();
+        $sqids   = new Sqids();
         $encoded = $sqids->encode([123]);
+        $request = $this->createRequest('GET', '/test/' . $encoded);
 
-        $request = $this->factory->createServerRequest('GET', '/test/' . $encoded);
-
-        $sut = new SqidsMiddleware($sqids);
-        $this->app->addMiddleware($sut);
+        $this->app->addMiddleware(new SqidsMiddleware($sqids));
         $this->app->addRoutingMiddleware();
-
         $this->app->get('/test/{testSqid}', TestAction::class);
 
-        $response = $this->app->handle($request);
+        $response = $this->handleRequest($request);
 
-        $this->assertStringContainsString("123", (string)$response->getBody());
+        $this->assertResponseContains("123", $response);
+    }
+
+    public function testMiddlewareIgnoresOtherArgumentsInUrl(): void
+    {
+        $sqids   = new Sqids();
+        $request = $this->createRequest('GET', '/test/abc');
+
+        $this->app->addMiddleware(new SqidsMiddleware($sqids));
+        $this->app->addRoutingMiddleware();
+        $this->app->get('/test/{id}', TestAction::class);
+
+        $response = $this->handleRequest($request);
+
+        $this->assertResponseContains("abc", $response);
+    }
+
+    public function testMiddlewareDecodesMultipleSqidsFromUrl(): void
+    {
+        $sqids   = new Sqids();
+        $encodedA = $sqids->encode([123]);
+        $encodedB = $sqids->encode([456]);
+        $request = $this->createRequest('GET', '/test/' . $encodedA . '/thing/' . $encodedB);
+
+        $this->app->addMiddleware(new SqidsMiddleware($sqids));
+        $this->app->addRoutingMiddleware();
+        $this->app->get('/test/{testSqid}/thing/{thingSqid}', TestAction::class);
+
+        $response = $this->handleRequest($request);
+
+        $this->assertResponseContains("123", $response);
+        $this->assertResponseContains("456", $response);
+    }
+
+    public function testMiddlewareIgnoresUrlWithoutArguments()
+    {
+        $request = $this->createRequest('GET', '/test/without/args');
+
+        $sqids   = new Sqids();
+        $this->app->addMiddleware(new SqidsMiddleware($sqids));
+        $this->app->addRoutingMiddleware();
+        $this->app->get('/test/without/args', TestAction::class);
+
+        $response = $this->handleRequest($request);
+
+        $this->assertResponseContains('{"Arguments":[]}', $response);
     }
 }

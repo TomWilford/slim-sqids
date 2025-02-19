@@ -14,10 +14,12 @@ class TestAction
         ResponseInterface $response,
         array $arguments = []
     ): ResponseInterface {
-        $response->getBody()->write(json_encode($arguments));
+        $result = [
+            'Arguments' => $arguments,
+        ];
+        $response->getBody()->write(json_encode($result));
         return $response
             ->withHeader('Content-Type', 'application/json')
             ->withStatus(200);
     }
-
 }

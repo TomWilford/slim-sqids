@@ -11,7 +11,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Routing\RouteContext;
 use Sqids\Sqids;
 
-class SqidsMiddleware implements MiddlewareInterface
+final class SqidsMiddleware implements MiddlewareInterface
 {
     public function __construct(private Sqids $sqids)
     {
@@ -24,12 +24,19 @@ class SqidsMiddleware implements MiddlewareInterface
         $route = $routeContext->getRoute();
 
         if ($route !== null) {
+            $sqids = $this->sqids;
             $arguments = $route->getArguments();
-            array_walk(
-                $arguments,
-                fn (&$value) => $value = $this->sqids->decode($value)[0]
-            );
-            $route->setArguments($arguments);
+            if (!empty($arguments)) {
+                array_walk(
+                    $arguments,
+                    function (&$value, $key) use ($sqids) {
+                        if (str_contains(strtolower($key), 'sqid')) {
+                            $value = $sqids->decode($value)[0];
+                        }
+                    }
+                );
+                $route->setArguments($arguments);
+            }
         }
 
         return $handler->handle($request);

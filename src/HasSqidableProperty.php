@@ -10,13 +10,9 @@ use Sqids\Sqids;
 
 class HasSqidableProperty
 {
-    /**
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
-     */
     private function getSqids(): Sqids
     {
-        return SqidConfiguration::getSqidsInstance();
+        return GlobalSqidConfiguration::get();
     }
 
     /**
