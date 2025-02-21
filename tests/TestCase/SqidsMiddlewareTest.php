@@ -7,6 +7,7 @@ namespace TomWilford\SlimSqids\Tests\TestCase;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use Sqids\Sqids;
+use TomWilford\SlimSqids\GlobalSqidConfiguration;
 use TomWilford\SlimSqids\SqidsMiddleware;
 use TomWilford\SlimSqids\Tests\Fixtures\TestAction;
 use TomWilford\SlimSqids\Tests\Traits\HttpTestTrait;
@@ -19,6 +20,11 @@ class SqidsMiddlewareTest extends TestCase
     protected function setUp(): void
     {
         $this->createApp();
+        try {
+            GlobalSqidConfiguration::get();
+        } catch (\RuntimeException $exception) {
+            GlobalSqidConfiguration::set(new Sqids());
+        }
     }
 
     public function testMiddlewareDecodesSqidFromUrl(): void
