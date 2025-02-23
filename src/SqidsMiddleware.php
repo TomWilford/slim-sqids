@@ -12,9 +12,9 @@ use Slim\Routing\RouteContext;
 use Sqids\Sqids;
 
 /**
- * Middleware for Slim that automatically decodes any route arguments with names containing "sqid".
+ * Middleware for Slim that automatically decodes any route arguments with keys containing "sqid".
  *
- * This middleware scans the current request for route arguments whose keys include the substring "sqid".
+ * This middleware scans the current request for route arguments where they key includes the substring "sqid".
  * When such an argument is found, its value is decoded using the provided Sqids instance and then updated.
  */
 final class SqidsMiddleware implements MiddlewareInterface

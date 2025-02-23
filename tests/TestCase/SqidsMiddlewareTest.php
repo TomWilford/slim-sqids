@@ -86,4 +86,19 @@ class SqidsMiddlewareTest extends TestCase
 
         $this->assertResponseContains('{"Arguments":[]}', $response);
     }
+
+    public function testMiddlewareWorksWithGlobalConfig()
+    {
+        $sqids   = new Sqids();
+        $encoded = $sqids->encode([123]);
+        $request = $this->createRequest('GET', '/test/' . $encoded);
+
+        $this->app->addMiddleware(new SqidsMiddleware());
+        $this->app->addRoutingMiddleware();
+        $this->app->get('/test/{testSqid}', TestAction::class);
+
+        $response = $this->handleRequest($request);
+
+        $this->assertResponseContains("123", $response);
+    }
 }
