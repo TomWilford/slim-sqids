@@ -1,6 +1,7 @@
 {
     "name": "tomwilford/slim-sqids",
     "type": "library",
+    "license": "MIT",
     "description": "Slim Framework Sqids middleware and service",
     "keywords": [
         "slim",
