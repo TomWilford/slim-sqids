@@ -16,7 +16,6 @@ use Sqids\Sqids;
 trait HasSqidablePropertyTrait
 {
     private ?Sqids $sqidsConfiguration = null;
-    private array $sqidableProperties = [];
 
     /**
      * Retrieves a Sqids instance for encoding.
@@ -42,7 +41,7 @@ trait HasSqidablePropertyTrait
      * A local cache stores the property names that are marked with #[SqidableProperty] to reduce the amount of times
      * we need to retrieve the sqidable properties via reflection per class.
      *
-     * @return array{string, string} An array of propertyName => encodedSqid
+     * @return array<string> An array of propertyName => encodedSqid
      */
     public function getAllSqids(): array
     {

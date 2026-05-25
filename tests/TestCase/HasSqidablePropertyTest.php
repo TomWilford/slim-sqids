@@ -29,7 +29,7 @@ class HasSqidablePropertyTest extends TestCase
         }
     }
 
-    public function testGetSqidEncodesPropertySpecifiedByAttribute()
+    public function testGetSqidEncodesPropertySpecifiedByAttribute(): void
     {
         $sqids = new Sqids();
         $expectedResult = $sqids->encode([1]);
@@ -39,7 +39,7 @@ class HasSqidablePropertyTest extends TestCase
         $this->assertSame($expectedResult, $sut->getSqid());
     }
 
-    public function testGetSqidReturnsFirstPropertyWhenUsedMultipleTimes()
+    public function testGetSqidReturnsFirstPropertyWhenUsedMultipleTimes(): void
     {
         $sqids = new Sqids();
         $expectedResult = $sqids->encode([1]);
@@ -49,14 +49,14 @@ class HasSqidablePropertyTest extends TestCase
         $this->assertSame($expectedResult, $sut->getSqid());
     }
 
-    public function testGetSqidReturnsNullWhenAttributeNotSet()
+    public function testGetSqidReturnsNullWhenAttributeNotSet(): void
     {
         $sut = new ClassConfiguredWithNoProperties(1);
 
         $this->assertNull($sut->getSqid());
     }
 
-    public function testGetSqidWorksWithInjectedInstanceOfSqids()
+    public function testGetSqidWorksWithInjectedInstanceOfSqids(): void
     {
         $sqids = new Sqids();
         $expectedResult = $sqids->encode([1]);
@@ -67,7 +67,7 @@ class HasSqidablePropertyTest extends TestCase
         $this->assertSame($expectedResult, $sut->getSqid());
     }
 
-    public function testGetAllSqidsEncodesPropertySpecifiedByAttribute()
+    public function testGetAllSqidsEncodesPropertySpecifiedByAttribute(): void
     {
         $sqids = new Sqids();
         $expectedResult = [
@@ -79,7 +79,7 @@ class HasSqidablePropertyTest extends TestCase
         $this->assertSame($expectedResult, $sut->getAllSqids());
     }
 
-    public function testGetAllSqidsReturnsAllSqidableProperties()
+    public function testGetAllSqidsReturnsAllSqidableProperties(): void
     {
         $sqids = new Sqids();
         $expectedResult = [
@@ -92,7 +92,7 @@ class HasSqidablePropertyTest extends TestCase
         $this->assertSame($expectedResult, $sut->getAllSqids());
     }
 
-    public function testGetAllSqidsReturnsEmptyArrayWhenAttributeNotSet()
+    public function testGetAllSqidsReturnsEmptyArrayWhenAttributeNotSet(): void
     {
         $sut = new ClassConfiguredWithNoProperties(1);
 

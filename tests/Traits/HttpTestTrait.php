@@ -10,6 +10,7 @@ use Slim\App;
 trait HttpTestTrait
 {
     protected Psr17Factory $factory;
+    /* @phpstan-ignore-next-line */
     protected App $app;
 
     protected function createApp(): void
@@ -24,7 +25,7 @@ trait HttpTestTrait
         return $this->factory->createServerRequest($method, $uri);
     }
 
-    protected function handleRequest($request): ResponseInterface
+    protected function handleRequest(ServerRequestInterface $request): ResponseInterface
     {
         return $this->app->handle($request);
     }

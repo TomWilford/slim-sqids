@@ -9,6 +9,12 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class TestAttributeIsUppercaseIdAction
 {
+    /**
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param array<string> $arguments
+     * @return ResponseInterface
+     */
     public function __invoke(
         ServerRequestInterface $request,
         ResponseInterface $response,
@@ -17,7 +23,7 @@ class TestAttributeIsUppercaseIdAction
         $result = [
             'attribute' => (bool)$request->getAttribute('ID', false),
         ];
-        $response->getBody()->write(json_encode($result));
+        $response->getBody()->write((string)json_encode($result));
         return $response
             ->withHeader('Content-Type', 'application/json')
             ->withStatus(200);
