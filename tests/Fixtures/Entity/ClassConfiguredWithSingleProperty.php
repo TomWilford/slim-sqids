@@ -2,20 +2,18 @@
 
 declare(strict_types=1);
 
-namespace TomWilford\SlimSqids\Tests\Fixtures;
+namespace TomWilford\SlimSqids\Tests\Fixtures\Entity;
 
 use TomWilford\SlimSqids\HasSqidablePropertyTrait;
 use TomWilford\SlimSqids\SqidableProperty;
 
-class ClassConfiguredWithMultipleProperties
+class ClassConfiguredWithSingleProperty
 {
     use HasSqidablePropertyTrait;
 
     public function __construct(
         #[SqidableProperty]
-        private int $id,
-        #[SqidableProperty]
-        private int $otherId
+        private int $id
     ) {
         //
     }

@@ -55,19 +55,43 @@ final class SqidsMiddleware implements MiddlewareInterface
         if ($route !== null) {
             $sqids = $this->sqids;
             $arguments = $route->getArguments();
-            if (!empty($arguments)) {
-                array_walk(
-                    $arguments,
-                    function (&$value, $key) use ($sqids) {
-                        if (str_contains(strtolower($key), 'sqid')) {
-                            $value = $sqids?->decode($value)[0];
-                        }
-                    }
-                );
-                $route->setArguments($arguments);
+
+            foreach ($arguments as $key => $value) {
+                if (str_contains(strtolower($key), 'sqid')) {
+                    $decoded = $sqids?->decode($value)[0];
+                    $request = $request->withAttribute(
+                        $this->getAttributeKey($key),
+                        $decoded
+                    );
+                }
             }
         }
 
         return $handler->handle($request);
+    }
+
+    /**
+     * Create the name for the new attribute, hopefully matching the case of the argument
+     *
+     * @param string $key
+     * @return string
+     */
+    private function getAttributeKey(string $key): string
+    {
+        return str_ireplace('sqid', $this->getIdInCase($key), $key);
+    }
+
+    /**
+     * Attempt to return 'id' in the case of the argument
+     * @param string $key
+     * @return string
+     */
+    private function getIdInCase(string $key): string
+    {
+        return match (true) {
+            $key === 'sqid', str_contains($key, '-'), str_contains($key, '_') => 'id',
+            $key === 'SQID' => 'ID',
+            default => 'Id',
+        };
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TomWilford\SlimSqids\Tests\Fixtures;
+namespace TomWilford\SlimSqids\Tests\Fixtures\Entity;
 
 use Sqids\Sqids;
 use TomWilford\SlimSqids\HasSqidablePropertyTrait;
@@ -17,7 +17,7 @@ class ClassWithInjectedSqidsInstance
 
     public function __construct(Sqids $sqids)
     {
-        $this->sqids = $sqids;
+        $this->sqidsConfiguration = $sqids;
     }
 
     public function setId(int $id): void

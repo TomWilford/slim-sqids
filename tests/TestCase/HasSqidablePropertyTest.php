@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace TomWilford\SlimSqids\Tests\TestCase;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use Sqids\Sqids;
 use TomWilford\SlimSqids\GlobalSqidConfiguration;
 use TomWilford\SlimSqids\HasSqidablePropertyTrait;
-use TomWilford\SlimSqids\Tests\Fixtures\ClassConfiguredWithMultipleProperties;
-use TomWilford\SlimSqids\Tests\Fixtures\ClassConfiguredWithNoProperties;
-use TomWilford\SlimSqids\Tests\Fixtures\ClassConfiguredWithSingleProperty;
-use TomWilford\SlimSqids\Tests\Fixtures\ClassWithInjectedSqidsInstance;
+use TomWilford\SlimSqids\Tests\Fixtures\Entity\ClassConfiguredWithMultipleProperties;
+use TomWilford\SlimSqids\Tests\Fixtures\Entity\ClassConfiguredWithNoProperties;
+use TomWilford\SlimSqids\Tests\Fixtures\Entity\ClassConfiguredWithSingleProperty;
+use TomWilford\SlimSqids\Tests\Fixtures\Entity\ClassWithInjectedSqidsInstance;
 
-#[UsesClass(HasSqidablePropertyTrait::class)]
+#[CoversClass(HasSqidablePropertyTrait::class)]
+#[UsesClass(Sqids::class)]
+#[UsesClass(GlobalSqidConfiguration::class)]
 class HasSqidablePropertyTest extends TestCase
 {
     public function setUp(): void
@@ -62,5 +65,37 @@ class HasSqidablePropertyTest extends TestCase
         $sut->setId(1);
 
         $this->assertSame($expectedResult, $sut->getSqid());
+    }
+
+    public function testGetAllSqidsEncodesPropertySpecifiedByAttribute()
+    {
+        $sqids = new Sqids();
+        $expectedResult = [
+            'id' => $sqids->encode([1])
+        ];
+
+        $sut = new ClassConfiguredWithSingleProperty(id: 1);
+
+        $this->assertSame($expectedResult, $sut->getAllSqids());
+    }
+
+    public function testGetAllSqidsReturnsAllSqidableProperties()
+    {
+        $sqids = new Sqids();
+        $expectedResult = [
+            'id' => $sqids->encode([1]),
+            'otherId' => $sqids->encode([2])
+        ];
+
+        $sut = new ClassConfiguredWithMultipleProperties(id: 1, otherId: 2);
+
+        $this->assertSame($expectedResult, $sut->getAllSqids());
+    }
+
+    public function testGetAllSqidsReturnsEmptyArrayWhenAttributeNotSet()
+    {
+        $sut = new ClassConfiguredWithNoProperties(1);
+
+        $this->assertEmpty($sut->getAllSqids());
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TomWilford\SlimSqids\Tests\Fixtures;
+namespace TomWilford\SlimSqids\Tests\Fixtures\Entity;
 
 use TomWilford\SlimSqids\HasSqidablePropertyTrait;
 

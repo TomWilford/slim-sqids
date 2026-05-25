@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace TomWilford\SlimSqids\Tests\Fixtures;
+namespace TomWilford\SlimSqids\Tests\Fixtures\Action;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class TestAction
+class TestAttributeIsPascalCaseIdAction
 {
     public function __invoke(
         ServerRequestInterface $request,
@@ -15,7 +15,7 @@ class TestAction
         array $arguments = []
     ): ResponseInterface {
         $result = [
-            'Arguments' => $arguments,
+            'attribute' => (bool)$request->getAttribute('TestId', false),
         ];
         $response->getBody()->write(json_encode($result));
         return $response

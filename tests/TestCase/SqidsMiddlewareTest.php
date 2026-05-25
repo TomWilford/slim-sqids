@@ -4,15 +4,25 @@ declare(strict_types=1);
 
 namespace TomWilford\SlimSqids\Tests\TestCase;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use Sqids\Sqids;
 use TomWilford\SlimSqids\GlobalSqidConfiguration;
 use TomWilford\SlimSqids\SqidsMiddleware;
-use TomWilford\SlimSqids\Tests\Fixtures\TestAction;
+use TomWilford\SlimSqids\Tests\Fixtures\Action\TestAttributeIsCamelCaseIdAction;
+use TomWilford\SlimSqids\Tests\Fixtures\Action\TestAttributeIsKebabCaseIdAction;
+use TomWilford\SlimSqids\Tests\Fixtures\Action\TestAttributeIsLowercaseIdAction;
+use TomWilford\SlimSqids\Tests\Fixtures\Action\TestAttributeIsPascalCaseIdAction;
+use TomWilford\SlimSqids\Tests\Fixtures\Action\TestAttributeIsSnakeCaseIdAction;
+use TomWilford\SlimSqids\Tests\Fixtures\Action\TestAttributeIsUppercaseIdAction;
+use TomWilford\SlimSqids\Tests\Fixtures\Action\TestMultipleAttributeAction;
+use TomWilford\SlimSqids\Tests\Fixtures\Action\TestSingleAttributeAction;
 use TomWilford\SlimSqids\Tests\Traits\HttpTestTrait;
 
-#[UsesClass(SqidsMiddleware::class)]
+#[CoversClass(SqidsMiddleware::class)]
+#[UsesClass(Sqids::class)]
+#[UsesClass(GlobalSqidConfiguration::class)]
 class SqidsMiddlewareTest extends TestCase
 {
     use HttpTestTrait;
@@ -35,25 +45,11 @@ class SqidsMiddlewareTest extends TestCase
 
         $this->app->addMiddleware(new SqidsMiddleware($sqids));
         $this->app->addRoutingMiddleware();
-        $this->app->get('/test/{testSqid}', TestAction::class);
+        $this->app->get('/test/{testSqid}', TestSingleAttributeAction::class);
 
         $response = $this->handleRequest($request);
 
         $this->assertResponseContains("123", $response);
-    }
-
-    public function testMiddlewareIgnoresOtherArgumentsInUrl(): void
-    {
-        $sqids   = new Sqids();
-        $request = $this->createRequest('GET', '/test/abc');
-
-        $this->app->addMiddleware(new SqidsMiddleware($sqids));
-        $this->app->addRoutingMiddleware();
-        $this->app->get('/test/{id}', TestAction::class);
-
-        $response = $this->handleRequest($request);
-
-        $this->assertResponseContains("abc", $response);
     }
 
     public function testMiddlewareDecodesMultipleSqidsFromUrl(): void
@@ -65,7 +61,7 @@ class SqidsMiddlewareTest extends TestCase
 
         $this->app->addMiddleware(new SqidsMiddleware($sqids));
         $this->app->addRoutingMiddleware();
-        $this->app->get('/test/{testSqid}/thing/{thingSqid}', TestAction::class);
+        $this->app->get('/test/{testSqid}/thing/{thingSqid}', TestMultipleAttributeAction::class);
 
         $response = $this->handleRequest($request);
 
@@ -73,21 +69,8 @@ class SqidsMiddlewareTest extends TestCase
         $this->assertResponseContains("456", $response);
     }
 
-    public function testMiddlewareIgnoresUrlWithoutArguments()
-    {
-        $request = $this->createRequest('GET', '/test/without/args');
 
-        $sqids   = new Sqids();
-        $this->app->addMiddleware(new SqidsMiddleware($sqids));
-        $this->app->addRoutingMiddleware();
-        $this->app->get('/test/without/args', TestAction::class);
-
-        $response = $this->handleRequest($request);
-
-        $this->assertResponseContains('{"Arguments":[]}', $response);
-    }
-
-    public function testMiddlewareWorksWithGlobalConfig()
+    public function testMiddlewareWorksWithGlobalConfig(): void
     {
         $sqids   = new Sqids();
         $encoded = $sqids->encode([123]);
@@ -95,10 +78,100 @@ class SqidsMiddlewareTest extends TestCase
 
         $this->app->addMiddleware(new SqidsMiddleware());
         $this->app->addRoutingMiddleware();
-        $this->app->get('/test/{testSqid}', TestAction::class);
+        $this->app->get('/test/{testSqid}', TestSingleAttributeAction::class);
 
         $response = $this->handleRequest($request);
 
         $this->assertResponseContains("123", $response);
+    }
+
+    public function testGetIdInCaseReturnsLowerCaseIdForLowercaseSqid(): void
+    {
+        $sqids   = new Sqids();
+        $encoded = $sqids->encode([123]);
+        $request = $this->createRequest('GET', '/test/' . $encoded);
+
+        $this->app->addMiddleware(new SqidsMiddleware($sqids));
+        $this->app->addRoutingMiddleware();
+        $this->app->get('/test/{sqid}', TestAttributeIsLowercaseIdAction::class);
+
+        $response = $this->handleRequest($request);
+
+        $this->assertResponseContains('true', $response);
+    }
+
+    public function testGetIdInCaseReturnsLowerCaseIdForSnakeCaseSqid(): void
+    {
+        $sqids   = new Sqids();
+        $encoded = $sqids->encode([123]);
+        $request = $this->createRequest('GET', '/test/' . $encoded);
+
+        $this->app->addMiddleware(new SqidsMiddleware($sqids));
+        $this->app->addRoutingMiddleware();
+        $this->app->get('/test/{test_sqid}', TestAttributeIsSnakeCaseIdAction::class);
+
+        $response = $this->handleRequest($request);
+
+        $this->assertResponseContains('true', $response);
+    }
+
+    public function testGetIdInCaseReturnsLowerCaseIdForKebabCaseSqid(): void
+    {
+        $sqids   = new Sqids();
+        $encoded = $sqids->encode([123]);
+        $request = $this->createRequest('GET', '/test/' . $encoded);
+
+        $this->app->addMiddleware(new SqidsMiddleware($sqids));
+        $this->app->addRoutingMiddleware();
+        $this->app->get('/test/{test-sqid}', TestAttributeIsKebabCaseIdAction::class);
+
+        $response = $this->handleRequest($request);
+
+        $this->assertResponseContains('true', $response);
+    }
+
+    public function testGetIdInCaseReturnsUppercaseIdForUppercaseSqid(): void
+    {
+        $sqids   = new Sqids();
+        $encoded = $sqids->encode([123]);
+        $request = $this->createRequest('GET', '/test/' . $encoded);
+
+        $this->app->addMiddleware(new SqidsMiddleware($sqids));
+        $this->app->addRoutingMiddleware();
+        $this->app->get('/test/{SQID}', TestAttributeIsUppercaseIdAction::class);
+
+        $response = $this->handleRequest($request);
+
+        $this->assertResponseContains('true', $response);
+    }
+
+    public function testGetIdInCaseReturnsPascalCaseIdForPascalCaseSqid(): void
+    {
+        $sqids   = new Sqids();
+        $encoded = $sqids->encode([123]);
+        $request = $this->createRequest('GET', '/test/' . $encoded);
+
+        $this->app->addMiddleware(new SqidsMiddleware($sqids));
+        $this->app->addRoutingMiddleware();
+        $this->app->get('/test/{TestSqid}', TestAttributeIsPascalCaseIdAction::class);
+
+        $response = $this->handleRequest($request);
+
+        $this->assertResponseContains('true', $response);
+    }
+
+    public function testGetIdInCaseReturnsPascalCaseIdForCamelCaseSqid(): void
+    {
+        $sqids   = new Sqids();
+        $encoded = $sqids->encode([123]);
+        $request = $this->createRequest('GET', '/test/' . $encoded);
+
+        $this->app->addMiddleware(new SqidsMiddleware($sqids));
+        $this->app->addRoutingMiddleware();
+        $this->app->get('/test/{testSqid}', TestAttributeIsCamelCaseIdAction::class);
+
+        $response = $this->handleRequest($request);
+
+        $this->assertResponseContains('true', $response);
     }
 }

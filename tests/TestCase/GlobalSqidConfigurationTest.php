@@ -6,6 +6,7 @@ namespace TomWilford\SlimSqids\Tests\TestCase;
 
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Sqids\Sqids;
 use TomWilford\SlimSqids\GlobalSqidConfiguration;
 
@@ -14,7 +15,7 @@ class GlobalSqidConfigurationTest extends TestCase
 {
     public function testSqidsConfigurationCannotBeRetrievedIfNotSet(): void
     {
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         GlobalSqidConfiguration::get();
     }
 
@@ -23,7 +24,7 @@ class GlobalSqidConfigurationTest extends TestCase
         $sqids = new Sqids();
         GlobalSqidConfiguration::set($sqids);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         GlobalSqidConfiguration::set($sqids);
     }
 }
