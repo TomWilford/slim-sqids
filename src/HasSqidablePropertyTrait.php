@@ -15,7 +15,7 @@ use Sqids\Sqids;
  */
 trait HasSqidablePropertyTrait
 {
-    private ?Sqids $sqids = null;
+    private ?Sqids $sqidsConfiguration = null;
 
     /**
      * Retrieves a Sqids instance for encoding.
@@ -25,35 +25,59 @@ trait HasSqidablePropertyTrait
      *
      * @return Sqids The Sqids instance to be used for encoding.
      */
-    private function getSqids(): Sqids
+    private function getSqidsConfiguration(): Sqids
     {
-        return $this->sqids ?? GlobalSqidConfiguration::get();
+        return $this->sqidsConfiguration ?? GlobalSqidConfiguration::get();
     }
 
     /**
-     * Returns the Sqid encoded value of the first property marked with #[SqidableProperty].
+     * Returns the Sqid encoded value of all properties marked with #[SqidableProperty].
      *
      * This method uses reflection to scan the class's properties for the #[SqidableProperty] attribute.
      * If it finds such a property and the property has a value, the value is encoded using the Sqids instance,
-     * and the encoded string is returned. If no matching property is found or its value is null, the method
-     * returns null.
+     * and the encoded string is added to a return array. If no matching properties are found or if a properties value
+     * is null, nothing is added to the array.
      *
-     * @return string|null The encoded property value, or null if no suitable property is found.
+     * A local cache stores the property names that are marked with #[SqidableProperty] to reduce the amount of times
+     * we need to retrieve the sqidable properties via reflection per class.
+     *
+     * @return array<string> An array of propertyName => encodedSqid
      */
-    public function getSqid(): ?string
+    public function getAllSqids(): array
     {
-        $reflection = new \ReflectionClass($this);
+        static $cache = [];
+        $class = static::class;
 
-        foreach ($reflection->getProperties() as $property) {
-            $attributes = $property->getAttributes(SqidableProperty::class);
-
-            if (count($attributes) === 1) {
-                if ($value = $property->getValue($this)) {
-                    return $this->getSqids()->encode([$value]);
+        if (!array_key_exists($class, $cache)) {
+            $cache[$class] = [];
+            $reflection = new \ReflectionClass($this);
+            foreach ($reflection->getProperties() as $property) {
+                if (count($property->getAttributes(SqidableProperty::class)) === 1) {
+                    $cache[$class][] = $property->getName();
                 }
             }
         }
 
-        return null;
+        $result = [];
+        $sqids = $this->getSqidsConfiguration();
+
+        foreach ($cache[$class] as $propertyName) {
+            $value = $this->{$propertyName};
+            if ($value !== null) {
+                $result[$propertyName] = $sqids->encode([$value]);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Returns the first property marked with #[SqidableProperty] for convenience when working with the primary/only id
+     * of a class.
+     * @return string|null
+     */
+    public function getSqid(): ?string
+    {
+        return array_values($this->getAllSqids())[0] ?? null;
     }
 }

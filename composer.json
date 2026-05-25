@@ -39,8 +39,8 @@
         "nyholm/psr7": "^1.8"
     },
     "scripts": {
-        "sniffer:check": "phpcs --standard=phpcs.xml",
-        "stan": "phpstan analyse src --memory-limit=-1 --level=8",
+        "cs:check": "phpcs --standard=phpcs.xml",
+        "stan": "phpstan analyse -c phpstan.neon",
         "test": "phpunit --do-not-cache-result --colors=always --display-warnings --display-deprecations",
         "test:all": [
             "@sniffer:check",

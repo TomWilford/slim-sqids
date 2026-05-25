@@ -4,11 +4,13 @@ namespace TomWilford\SlimSqids\Tests\Traits;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Slim\App;
 
 trait HttpTestTrait
 {
     protected Psr17Factory $factory;
+    /* @phpstan-ignore-next-line */
     protected App $app;
 
     protected function createApp(): void
@@ -18,12 +20,12 @@ trait HttpTestTrait
         $this->app->addBodyParsingMiddleware();
     }
 
-    protected function createRequest(string $method, string $uri)
+    protected function createRequest(string $method, string $uri): ServerRequestInterface
     {
         return $this->factory->createServerRequest($method, $uri);
     }
 
-    protected function handleRequest($request)
+    protected function handleRequest(ServerRequestInterface $request): ResponseInterface
     {
         return $this->app->handle($request);
     }

@@ -1,7 +1,9 @@
 # slim-sqids
 This package helps you implement [Sqids](https://github.com/sqids/sqids-php) in [Slim](https://www.slimframework.com/). 
-It provides a ~~sqiddleware~~ middleware that automatically decodes Sqids from URL parameters and a trait that adds a 
-getter to return a Sqid-encoded value of a designated property.
+It provides
+- A ~~sqiddleware~~ middleware that automatically decodes Sqids from URL parameters and passes the decoded value on as 
+  an attribute
+- A trait that adds a getter to return a Sqid-encoded value of a designated property
 
 ## Install
 Install via [Composer](https://getcomposer.org/):
@@ -15,7 +17,7 @@ Once slim-sqids is configured (see the Configuration section below), you can use
 1. **Register the Middleware:** 
 
    Add the slim-sqids middleware before the routing middleware. This ensures that any 
-   route arguments containing "sqid" (case-insensitive) are decoded automatically.
+   route arguments containing "sqid" (case-insensitive) are decoded and the value is stored as an attribute
 ```php
 $app = new Slim\App();
 
@@ -28,18 +30,19 @@ $app->addRoutingMiddleware();
    For any route that uses a Sqid, include the string "sqid" in the argument 
 name. For example:
 ```php
-$app->get('/foos/{fooSqid}', \App\Action\Foo\Page\ShowAction::class);
+$app->get('/foos/{fooSqid}', \App\Action\Foo\Web\ShowFooPageAction::class);
 ```
 In the above example, if a request is made to `/foos/UKkLWZg9DA`, the middleware decodes the parameter into `123`. Your 
-controller then receives the decoded value:
+controller then receives the decoded as a request attribute. The attribute will replace sqid with id, hopefully in the 
+same case as the attribute (snake, pascal, camel, kebab):
 ```php
 public function __invoke(
     Request $request,
     Response $response,
     array $arguments = []
 ) {
-    // 'fooSqid' now holds the decoded value (e.g., 123)
-    $id = $arguments['fooSqid'];
+    // The 'fooId' attribute now holds the decoded value (e.g., 123)
+    $id = $request->getAttribute('fooId');
 
     $foo = $this->repository->ofId($id);
     // ...
@@ -82,6 +85,32 @@ class Foo {
         return [
             'id'  => $this->getSqid(), // returns the encoded value (e.g., UKkLWZg9DA)
             'bar' => $this->bar,
+        ];
+    }
+}
+```
+
+##### Classes With Multiple Sqids
+If you have a shoal of sqids on a class (for example a foreign key of another entity) you can retrieve them all with
+`getAllSqids`. This will return an array of propertyName => encodedSqid.
+```php
+
+class Foo
+{
+    use \TomWilford\SlimSqids\HasSqidablePropertyTrait;
+
+    #[\TomWilford\SlimSqids\SqidableProperty]
+    private int $id;
+    #[\TomWilford\SlimSqids\SqidableProperty]
+    private int $groupId;
+    
+    // ...
+    
+    public function jsonSerialize(): mixed
+    {
+        return [
+            'id'  => $this->getAllSqids()['id'], // returns the encoded value (e.g., UKkLWZg9DA)
+            'group_id' => $this->getAllSqids()['groupId'], // returns the encoded value (e.g., SFfsL4g64)
         ];
     }
 }
